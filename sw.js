@@ -3,6 +3,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/checklist.html',
+  '/bath-time.html',
   '/style.css',
   '/script.js',
   '/manifest.json'
@@ -152,8 +153,12 @@ self.addEventListener('notificationclick', event => {
 
   let targetUrl = '/';
   
+  // お風呂の通知の場合はお風呂ページを開く
+  if (event.notification.tag === NOTIFICATION_TAGS.BATH) {
+    targetUrl = '/bath-time.html';
+  }
   // 就寝準備の通知の場合はチェックリストページを開く
-  if (event.notification.tag === NOTIFICATION_TAGS.PREP) {
+  else if (event.notification.tag === NOTIFICATION_TAGS.PREP) {
     targetUrl = '/checklist.html';
   }
 

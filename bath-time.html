@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お風呂の時間</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <style>
+        .bath-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .bath-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .bath-header h1 {
+            color: white;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .bath-header .subtitle {
+            color: #e0e7ff;
+            font-size: 1rem;
+        }
+        
+        .guidance-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .guidance-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .guidance-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+            font-size: 16px;
+            line-height: 1.6;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .guidance-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .guidance-list li::before {
+            content: "•";
+            color: #4f46e5;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .time-display {
+            text-align: center;
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn-back {
+            flex: 1;
+            padding: 12px 24px;
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn-back:hover {
+            background: #e5e7eb;
+        }
+        
+        .bath-emoji {
+            font-size: 3rem;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .relaxation-tip {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .relaxation-tip h3 {
+            color: #4338ca;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .relaxation-tip p {
+            color: #4338ca;
+            font-size: 14px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bath-container">
+        <header class="bath-header">
+            <div class="time-display" id="currentTime"></div>
+            <h1>🛁 就寝1時間半前になりました</h1>
+            <p class="subtitle">お風呂（シャワー）に入りましょう</p>
+            <p class="subtitle">以下項目に気を付けて行動しましょう</p>
+        </header>
+        
+        <div class="guidance-card">
+            <div class="bath-emoji">🛁</div>
+            
+            <ul class="guidance-list">
+                <li>部屋の明かりを出来るだけ暗くする</li>
+                <li>スマホで能動的な行動を控える</li>
+                <li>ストレッチ（首・肩・腰）や深呼吸をする</li>
+                <li>興味のない・退屈なことをする（退屈な本・記事を読むなど）</li>
+                <li>今日の出来事で良かったことを考える</li>
+            </ul>
+            
+            <div class="relaxation-tip">
+                <h3>💡 リラックスのコツ</h3>
+                <p>温かいお風呂でゆっくりと体を温めて、心身をリラックス状態に導きましょう</p>
+            </div>
+            
+            <div class="actions">
+                <a href="index.html" class="btn-back">メインページに戻る</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class BathTimeManager {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                this.updateCurrentTime();
+                // 1分ごとに時刻を更新
+                setInterval(() => {
+                    this.updateCurrentTime();
+                }, 60000);
+            }
+            
+            updateCurrentTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                document.getElementById('currentTime').textContent = timeString;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new BathTimeManager();
+        });
+    </script>
+</body>
+</html>
