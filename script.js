@@ -104,6 +104,20 @@ class SleepChecker {
             return;
         }
 
+        // Service Workerに通知スケジュールを委託
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SCHEDULE_NOTIFICATIONS',
+                bedtime: this.bedtime
+            });
+            console.log(`通知スケジュールをService Workerに送信: ${this.bedtime}`);
+        } else {
+            // フォールバック: 従来の方式
+            this.scheduleNotificationsFallback();
+        }
+    }
+
+    scheduleNotificationsFallback() {
         // 既存の通知をクリア
         this.notifications.forEach(id => clearTimeout(id));
         this.notifications = [];
@@ -142,7 +156,7 @@ class SleepChecker {
             this.notifications.push(prepNotification);
         }
 
-        console.log(`通知スケジュール設定完了:
+        console.log(`フォールバック通知スケジュール設定完了:
         お風呂: ${bathTime.toLocaleString('ja-JP')}
         就寝準備: ${prepTime.toLocaleString('ja-JP')}`);
     }
