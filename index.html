@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>睡眠チェック</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>😴 睡眠チェック</h1>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2>就寝時間を設定</h2>
+                <div class="time-input">
+                    <label for="bedtime">就寝時間:</label>
+                    <input type="time" id="bedtime" value="23:00">
+                </div>
+                <button id="setBedtime" class="btn-primary">設定する</button>
+            </div>
+            
+            <div class="card">
+                <h3>通知スケジュール</h3>
+                <div class="schedule">
+                    <div class="schedule-item">
+                        <span class="time" id="bathTime">21:30</span>
+                        <span class="action">🛁 お風呂に入る</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time" id="prepTime">22:30</span>
+                        <span class="action">🧘 就寝準備 (ヨガ・スマホ排除・明かりを暗く)</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time" id="sleepTime">23:00</span>
+                        <span class="action">😴 就寝時間</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>通知設定</h3>
+                <button id="enableNotifications" class="btn-secondary">通知を有効にする</button>
+                <div id="notificationStatus" class="status"></div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
