@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>就寝準備チェックリスト</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <style>
+        .checklist-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .checklist-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .checklist-header h1 {
+            color: white;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .checklist-header .subtitle {
+            color: #e0e7ff;
+            font-size: 1rem;
+        }
+        
+        .checklist {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 16px;
+            accent-color: #4f46e5;
+            cursor: pointer;
+        }
+        
+        .checklist-item label {
+            flex: 1;
+            font-size: 16px;
+            color: #374151;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+        
+        .checklist-item.completed label {
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .completion-message {
+            text-align: center;
+            padding: 20px;
+            background: #dcfce7;
+            border-radius: 8px;
+            color: #166534;
+            font-weight: 600;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn-back {
+            flex: 1;
+            padding: 12px 24px;
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .btn-back:hover {
+            background: #e5e7eb;
+        }
+        
+        .time-display {
+            text-align: center;
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="checklist-container">
+        <header class="checklist-header">
+            <div class="time-display" id="currentTime"></div>
+            <h1>😴 就寝30分前になりました</h1>
+            <p class="subtitle">以下項目を確認しましょう</p>
+        </header>
+        
+        <div class="checklist">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="checklist-item">
+                <input type="checkbox" id="item1">
+                <label for="item1">部屋の明かりを出来るだけ暗くする</label>
+            </div>
+            
+            <div class="checklist-item">
+                <input type="checkbox" id="item2">
+                <label for="item2">スマホで能動的な行動を控える</label>
+            </div>
+            
+            <div class="checklist-item">
+                <input type="checkbox" id="item3">
+                <label for="item3">ストレッチ（首・肩・腰）や深呼吸をする</label>
+            </div>
+            
+            <div class="checklist-item">
+                <input type="checkbox" id="item4">
+                <label for="item4">興味のない・退屈なことをする</label>
+            </div>
+            
+            <div class="checklist-item">
+                <input type="checkbox" id="item5">
+                <label for="item5">今日の出来事で良かったことを考える</label>
+            </div>
+            
+            <div class="completion-message" id="completionMessage">
+                🎉 お疲れ様です！良い眠りを！
+            </div>
+            
+            <div class="actions">
+                <a href="index.html" class="btn-back">メインページに戻る</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class ChecklistManager {
+            constructor() {
+                this.totalItems = 5;
+                this.init();
+            }
+            
+            init() {
+                this.updateCurrentTime();
+                this.loadProgress();
+                this.setupEventListeners();
+                this.updateProgress();
+            }
+            
+            updateCurrentTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                document.getElementById('currentTime').textContent = timeString;
+            }
+            
+            setupEventListeners() {
+                for (let i = 1; i <= this.totalItems; i++) {
+                    const checkbox = document.getElementById(`item${i}`);
+                    const checklistItem = checkbox.closest('.checklist-item');
+                    
+                    checkbox.addEventListener('change', () => {
+                        if (checkbox.checked) {
+                            checklistItem.classList.add('completed');
+                        } else {
+                            checklistItem.classList.remove('completed');
+                        }
+                        this.saveProgress();
+                        this.updateProgress();
+                    });
+                }
+            }
+            
+            updateProgress() {
+                const checkedItems = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).length;
+                const progressPercent = (checkedItems / this.totalItems) * 100;
+                
+                document.getElementById('progressFill').style.width = `${progressPercent}%`;
+                
+                if (checkedItems === this.totalItems) {
+                    document.getElementById('completionMessage').style.display = 'block';
+                } else {
+                    document.getElementById('completionMessage').style.display = 'none';
+                }
+            }
+            
+            saveProgress() {
+                const progress = {};
+                for (let i = 1; i <= this.totalItems; i++) {
+                    const checkbox = document.getElementById(`item${i}`);
+                    progress[`item${i}`] = checkbox.checked;
+                }
+                localStorage.setItem('checklistProgress', JSON.stringify(progress));
+            }
+            
+            loadProgress() {
+                const saved = localStorage.getItem('checklistProgress');
+                if (saved) {
+                    const progress = JSON.parse(saved);
+                    for (let i = 1; i <= this.totalItems; i++) {
+                        const checkbox = document.getElementById(`item${i}`);
+                        const checklistItem = checkbox.closest('.checklist-item');
+                        if (progress[`item${i}`]) {
+                            checkbox.checked = true;
+                            checklistItem.classList.add('completed');
+                        }
+                    }
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChecklistManager();
+        });
+    </script>
+</body>
+</html>

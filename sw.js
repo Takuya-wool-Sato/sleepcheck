@@ -2,6 +2,7 @@ const CACHE_NAME = 'sleep-checker-v2';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/checklist.html',
   '/style.css',
   '/script.js',
   '/manifest.json'
@@ -149,18 +150,25 @@ self.addEventListener('notificationclick', event => {
     return;
   }
 
+  let targetUrl = '/';
+  
+  // 就寝準備の通知の場合はチェックリストページを開く
+  if (event.notification.tag === NOTIFICATION_TAGS.PREP) {
+    targetUrl = '/checklist.html';
+  }
+
   // アプリを開く
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then(clientList => {
       // 既にアプリが開いている場合はそれにフォーカス
       for (let client of clientList) {
-        if (client.url === '/' && 'focus' in client) {
+        if (client.url.includes(targetUrl.replace('/', '')) && 'focus' in client) {
           return client.focus();
         }
       }
       // 新しいウィンドウを開く
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow(targetUrl);
       }
     })
   );
