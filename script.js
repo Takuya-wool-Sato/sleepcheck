@@ -80,7 +80,13 @@ class SleepChecker {
             return;
         }
 
+        if (!('serviceWorker' in navigator)) {
+            this.showStatus('このブラウザはサービスワーカーをサポートしていません', 'error');
+            return;
+        }
+
         if (Notification.permission === 'granted') {
+            await this.setupPushNotifications();
             this.showStatus('通知は既に有効になっています', 'success');
             this.scheduleNotifications();
             return;
@@ -89,6 +95,7 @@ class SleepChecker {
         if (Notification.permission !== 'denied') {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
+                await this.setupPushNotifications();
                 this.showStatus('通知が有効になりました！', 'success');
                 this.scheduleNotifications();
             } else {
@@ -193,6 +200,89 @@ class SleepChecker {
         }
     }
 
+    async setupPushNotifications() {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            
+            // VAPID公開鍵（実際のプロジェクトでは環境変数から取得）
+            const vapidPublicKey = 'BMqSvZeRGN-MKOQNWyBK3W3TmAC8gWnJhGfL9z0hGXfV2G7_3WyH8r_7zYN1Z9Q1mBG5X0C4_X0o7Y1Z9Q1nBG5Y1Z';
+            
+            // 既存のsubscriptionをチェック
+            let subscription = await registration.pushManager.getSubscription();
+            
+            if (!subscription) {
+                // 新しいsubscriptionを作成
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+                });
+            }
+            
+            // subscriptionをサーバーに送信
+            await this.sendSubscriptionToServer(subscription);
+            
+            // localStorageにも保存
+            localStorage.setItem('pushSubscription', JSON.stringify(subscription));
+            
+            // Service Workerにsubscriptionを送信
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'STORE_PUSH_SUBSCRIPTION',
+                    subscription: subscription,
+                    bedtime: this.bedtime
+                });
+            }
+            
+            console.log('Push subscription setup complete:', subscription.endpoint);
+            
+        } catch (error) {
+            console.error('Push notification setup failed:', error);
+            this.showStatus('Push通知の設定に失敗しました', 'error');
+        }
+    }
+
+    async sendSubscriptionToServer(subscription) {
+        try {
+            const response = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    subscription: subscription,
+                    bedtime: this.bedtime
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('Subscription sent to server:', result);
+            
+        } catch (error) {
+            console.error('Failed to send subscription to server:', error);
+            // サーバーに送信できない場合はローカルでフォールバック
+            this.scheduleNotificationsFallback();
+        }
+    }
+
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
     showStatus(message, type) {
         const status = document.getElementById('notificationStatus');
         status.textContent = message;
@@ -214,6 +304,15 @@ if ('serviceWorker' in navigator) {
             .catch(error => {
                 console.log('Service Worker registration failed:', error);
             });
+    });
+
+    // Service Workerからのメッセージを受信
+    navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data && event.data.type === 'STORE_SUBSCRIPTION_DATA') {
+            // subscriptionデータをlocalStorageに保存
+            localStorage.setItem('subscriptionData', JSON.stringify(event.data.data));
+            console.log('Subscription data stored from Service Worker');
+        }
     });
 }
 

@@ -55,11 +55,48 @@ self.addEventListener('fetch', event => {
   );
 });
 
+// Push通知受信
+self.addEventListener('push', event => {
+  if (event.data) {
+    const data = event.data.json();
+    const { title, body, tag } = data;
+    
+    const options = {
+      body: body,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" fill="%234f46e5"/><text x="96" y="120" font-size="96" text-anchor="middle" fill="white">😴</text></svg>',
+      badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" fill="%234f46e5"/><text x="96" y="120" font-size="96" text-anchor="middle" fill="white">😴</text></svg>',
+      tag: tag,
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      actions: [
+        {
+          action: 'open',
+          title: 'アプリを開く'
+        },
+        {
+          action: 'dismiss',
+          title: '閉じる'
+        }
+      ],
+      data: {
+        url: tag === NOTIFICATION_TAGS.BATH ? '/bath-time.html' : '/checklist.html'
+      }
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(title, options)
+    );
+  }
+});
+
 // メッセージ受信（メインスレッドからの通知スケジュール）
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SCHEDULE_NOTIFICATIONS') {
     const { bedtime } = event.data;
     scheduleNotifications(bedtime);
+  } else if (event.data && event.data.type === 'STORE_PUSH_SUBSCRIPTION') {
+    const { subscription, bedtime } = event.data;
+    storePushSubscription(subscription, bedtime);
   }
 });
 
@@ -141,6 +178,28 @@ function showNotification(title, body, tag) {
   };
 
   self.registration.showNotification(title, options);
+}
+
+// Push subscriptionを保存
+function storePushSubscription(subscription, bedtime) {
+  // IndexedDBに保存（簡易版はlocalStorageを使用）
+  const subscriptionData = {
+    subscription: subscription,
+    bedtime: bedtime,
+    timestamp: Date.now()
+  };
+  
+  // Service Worker内ではlocalStorageが使えないので、postMessageでメインスレッドに送信
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'STORE_SUBSCRIPTION_DATA',
+        data: subscriptionData
+      });
+    });
+  });
+  
+  console.log('Push subscription stored:', subscription.endpoint);
 }
 
 // 通知クリック処理
