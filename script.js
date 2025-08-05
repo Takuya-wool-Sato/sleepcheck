@@ -87,6 +87,12 @@ class SleepChecker {
             return;
         }
 
+        // 就寝時間が設定されているかチェック
+        if (!this.bedtime) {
+            this.showStatus('先に就寝時間を設定してください', 'error');
+            return;
+        }
+
         if (Notification.permission === 'granted') {
             await this.setupPushNotifications();
             this.showStatus('通知は既に有効になっています', 'success');
