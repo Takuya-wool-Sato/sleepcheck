@@ -1,7 +1,5 @@
 const webpush = require('web-push');
-
-// グローバル変数でデータを保存（実際の本番環境ではデータベースを使用）
-let subscriptions = [];
+const sharedData = require('./shared-data');
 
 // VAPID設定
 const vapidKeys = {
@@ -25,7 +23,7 @@ async function sendPushNotification(subscription, payload) {
     
     // subscriptionが無効な場合は削除
     if (error.statusCode === 410) {
-      subscriptions = subscriptions.filter(s => s.subscription.endpoint !== subscription.endpoint);
+      sharedData.removeSubscription(subscription.endpoint);
       console.log('Invalid subscription removed');
     }
   }
@@ -37,6 +35,8 @@ export default async function handler(req, res) {
   }
 
   const { message } = req.body;
+  
+  const subscriptions = sharedData.getSubscriptions();
   
   if (subscriptions.length === 0) {
     return res.status(400).json({ error: 'No subscriptions found' });

@@ -1,8 +1,5 @@
 const webpush = require('web-push');
-
-// グローバル変数でデータを保存（実際の本番環境ではデータベースを使用）
-let subscriptions = [];
-let scheduledNotifications = [];
+const sharedData = require('./shared-data');
 
 // VAPID設定
 const vapidKeys = {
@@ -51,7 +48,7 @@ function scheduleNotifications(subscription, bedtime) {
       });
     }, bathDelay);
     
-    scheduledNotifications.push({
+    sharedData.addScheduledNotification({
       endpoint: subscription.endpoint,
       timeoutId,
       type: 'bath'
@@ -67,7 +64,7 @@ function scheduleNotifications(subscription, bedtime) {
       });
     }, prepDelay);
     
-    scheduledNotifications.push({
+    sharedData.addScheduledNotification({
       endpoint: subscription.endpoint,
       timeoutId,
       type: 'prep'
@@ -81,11 +78,7 @@ function scheduleNotifications(subscription, bedtime) {
 
 // スケジュールされた通知をクリア
 function clearScheduledNotifications(endpoint) {
-  scheduledNotifications
-    .filter(n => n.endpoint === endpoint)
-    .forEach(n => clearTimeout(n.timeoutId));
-  
-  scheduledNotifications = scheduledNotifications.filter(n => n.endpoint !== endpoint);
+  sharedData.clearScheduledNotifications(endpoint);
 }
 
 // Push通知を送信
@@ -98,7 +91,7 @@ async function sendPushNotification(subscription, payload) {
     
     // subscriptionが無効な場合は削除
     if (error.statusCode === 410) {
-      subscriptions = subscriptions.filter(s => s.subscription.endpoint !== subscription.endpoint);
+      sharedData.removeSubscription(subscription.endpoint);
       console.log('Invalid subscription removed');
     }
   }
@@ -112,10 +105,10 @@ export default async function handler(req, res) {
   const { subscription, bedtime } = req.body;
   
   // 既存のsubscriptionを削除
-  subscriptions = subscriptions.filter(s => s.subscription.endpoint !== subscription.endpoint);
+  sharedData.removeSubscription(subscription.endpoint);
   
   // 新しいsubscriptionを追加
-  subscriptions.push({
+  sharedData.addSubscription({
     subscription,
     bedtime,
     timestamp: Date.now()
