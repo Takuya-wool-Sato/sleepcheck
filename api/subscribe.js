@@ -1,19 +1,13 @@
-const express = require('express');
 const webpush = require('web-push');
-const path = require('path');
-const fs = require('fs');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// グローバル変数でデータを保存（実際の本番環境ではデータベースを使用）
+let subscriptions = [];
+let scheduledNotifications = [];
 
-// ミドルウェア
-app.use(express.json());
-app.use(express.static('.'));
-
-// VAPID設定（実際のプロジェクトでは環境変数を使用）
+// VAPID設定
 const vapidKeys = {
-  publicKey: 'BITMyDCK1xhL-vMlpnMc6yhrwwA7MkgLuKJnk_m032tfgVwjyoK9Sp_0FLGEglUVOGKNe1JDVTvv3lI8i6yjYZs',
-  privateKey: 'wmhXfHGMJNFX0uc1NynvMgQTlQzixXJg3ueogSgF2sU'
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BITMyDCK1xhL-vMlpnMc6yhrwwA7MkgLuKJnk_m032tfgVwjyoK9Sp_0FLGEglUVOGKNe1JDVTvv3lI8i6yjYZs',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'wmhXfHGMJNFX0uc1NynvMgQTlQzixXJg3ueogSgF2sU'
 };
 
 webpush.setVapidDetails(
@@ -21,33 +15,6 @@ webpush.setVapidDetails(
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
-
-// データストレージ（実際のプロジェクトではデータベースを使用）
-let subscriptions = [];
-let scheduledNotifications = [];
-
-// Push subscription を登録
-app.post('/api/subscribe', (req, res) => {
-  const { subscription, bedtime } = req.body;
-  
-  // 既存のsubscriptionを削除
-  subscriptions = subscriptions.filter(s => s.subscription.endpoint !== subscription.endpoint);
-  
-  // 新しいsubscriptionを追加
-  subscriptions.push({
-    subscription,
-    bedtime,
-    timestamp: Date.now()
-  });
-  
-  console.log('New subscription registered:', subscription.endpoint);
-  console.log('Bedtime:', bedtime);
-  
-  // 通知をスケジュール
-  scheduleNotifications(subscription, bedtime);
-  
-  res.status(201).json({ message: 'Subscription registered successfully' });
-});
 
 // 通知をスケジュール
 function scheduleNotifications(subscription, bedtime) {
@@ -137,44 +104,28 @@ async function sendPushNotification(subscription, payload) {
   }
 }
 
-// テスト用のPush通知送信エンドポイント
-app.post('/api/test-notification', async (req, res) => {
-  const { message } = req.body;
-  
-  if (subscriptions.length === 0) {
-    return res.status(400).json({ error: 'No subscriptions found' });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-  
-  const testPayload = {
-    title: 'テスト通知',
-    body: message || 'これはテスト通知です',
-    tag: 'test-notification'
-  };
-  
-  try {
-    await Promise.all(
-      subscriptions.map(s => sendPushNotification(s.subscription, testPayload))
-    );
-    res.json({ message: 'Test notifications sent successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to send test notifications' });
-  }
-});
 
-// 登録されたsubscriptionの一覧を取得
-app.get('/api/subscriptions', (req, res) => {
-  res.json({
-    count: subscriptions.length,
-    subscriptions: subscriptions.map(s => ({
-      endpoint: s.subscription.endpoint,
-      bedtime: s.bedtime,
-      timestamp: s.timestamp
-    }))
+  const { subscription, bedtime } = req.body;
+  
+  // 既存のsubscriptionを削除
+  subscriptions = subscriptions.filter(s => s.subscription.endpoint !== subscription.endpoint);
+  
+  // 新しいsubscriptionを追加
+  subscriptions.push({
+    subscription,
+    bedtime,
+    timestamp: Date.now()
   });
-});
-
-// サーバー起動
-app.listen(PORT, () => {
-  console.log(`Push notification server running on port ${PORT}`);
-  console.log(`Visit http://localhost:${PORT} to access the app`);
-});
+  
+  console.log('New subscription registered:', subscription.endpoint);
+  console.log('Bedtime:', bedtime);
+  
+  // 通知をスケジュール
+  scheduleNotifications(subscription, bedtime);
+  
+  res.status(201).json({ message: 'Subscription registered successfully' });
+}

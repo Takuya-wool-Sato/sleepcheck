@@ -15,10 +15,12 @@ class SleepChecker {
     setupEventListeners() {
         const setBedtimeBtn = document.getElementById('setBedtime');
         const enableNotificationsBtn = document.getElementById('enableNotifications');
+        const testNotificationBtn = document.getElementById('testNotification');
         const bedtimeInput = document.getElementById('bedtime');
 
         setBedtimeBtn.addEventListener('click', () => this.setBedtime());
         enableNotificationsBtn.addEventListener('click', () => this.enableNotifications());
+        testNotificationBtn.addEventListener('click', () => this.sendTestNotification());
         bedtimeInput.addEventListener('change', () => this.updateScheduleDisplay());
     }
 
@@ -205,7 +207,7 @@ class SleepChecker {
             const registration = await navigator.serviceWorker.ready;
             
             // VAPID公開鍵（実際のプロジェクトでは環境変数から取得）
-            const vapidPublicKey = 'BMqSvZeRGN-MKOQNWyBK3W3TmAC8gWnJhGfL9z0hGXfV2G7_3WyH8r_7zYN1Z9Q1mBG5X0C4_X0o7Y1Z9Q1nBG5Y1Z';
+            const vapidPublicKey = 'BITMyDCK1xhL-vMlpnMc6yhrwwA7MkgLuKJnk_m032tfgVwjyoK9Sp_0FLGEglUVOGKNe1JDVTvv3lI8i6yjYZs';
             
             // 既存のsubscriptionをチェック
             let subscription = await registration.pushManager.getSubscription();
@@ -281,6 +283,32 @@ class SleepChecker {
             outputArray[i] = rawData.charCodeAt(i);
         }
         return outputArray;
+    }
+
+    async sendTestNotification() {
+        const testMessage = document.getElementById('testMessage').value;
+        
+        try {
+            const response = await fetch('/api/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: testMessage || 'これはテスト通知です'
+                })
+            });
+            
+            if (response.ok) {
+                this.showStatus('テスト通知を送信しました', 'success');
+            } else {
+                const error = await response.json();
+                this.showStatus(`テスト通知の送信に失敗: ${error.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Test notification error:', error);
+            this.showStatus('テスト通知の送信に失敗しました', 'error');
+        }
     }
 
     showStatus(message, type) {

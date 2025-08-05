@@ -139,6 +139,45 @@ header h1 {
     color: #dc2626;
 }
 
+.test-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.test-section h4 {
+    color: #6b7280;
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+
+.btn-test {
+    width: 100%;
+    padding: 10px 20px;
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background 0.2s;
+}
+
+.btn-test:hover {
+    background: #d97706;
+}
+
+.test-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+}
+
 @media (max-width: 480px) {
     body {
         padding: 10px;
